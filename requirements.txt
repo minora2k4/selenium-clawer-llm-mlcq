@@ -1,0 +1,9 @@
+selenium==4.46.0
+pandas
+beautifulsoup4
+lxml
+selenium>=4.20
+# Tuỳ chọn: chỉ cần nếu bạn muốn chuyển create_driver() sang dùng
+# undetected-chromedriver để giảm tình trạng Cloudflare bắt xác minh
+# lặp lại liên tục (xem ghi chú trong crawler.py).
+undetected-chromedriver>=3.5
