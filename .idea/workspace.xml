@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fcff7cde-2bf8-4793-a693-14c92a60072e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/questions.json" beforeDir="false" afterPath="$PROJECT_DIR$/questions.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/test.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
