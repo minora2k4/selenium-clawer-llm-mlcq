@@ -85,7 +85,7 @@ python3 -m http.server 8000
 
 Sau đó mở: **http://localhost:8000/app/index.html**
 
-Để dùng trên điện thoại cùng mạng LAN, thay `localhost` bằng địa chỉ IP của máy tính, ví dụ `http://192.168.1.5:8000/app/index.html`.
+Để dùng trên điện thoại cùng mạng LAN, thay `localhost` bằng địa chỉ IP của máy tính, ví dụ `http://xxx.yyy.z.t:8000/app/index.html`.
 
 ## Cập nhật dữ liệu
 
