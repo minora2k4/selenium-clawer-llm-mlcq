@@ -356,6 +356,7 @@ button{font-family:inherit;}
   line-height:1.45;
 }
 .option:hover{border-color:#B9C2D6;}
+.option .opt-text{flex:1 1 auto;min-width:0;}
 .option .key{
   flex:0 0 auto;
   width:24px;height:24px;
@@ -611,4 +612,58 @@ button{font-family:inherit;}
 
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;}
+}
+
+/* ---------- Markdown & KaTeX content (bên trong q-text / option / rc-explain) ---------- */
+.q-text p,
+.opt-text p,
+.rc-explain p{
+  margin:0 0 8px;
+}
+.q-text p:last-child,
+.opt-text p:last-child,
+.rc-explain p:last-child{
+  margin-bottom:0;
+}
+.q-text ul, .q-text ol,
+.opt-text ul, .opt-text ol,
+.rc-explain ul, .rc-explain ol{
+  margin:0 0 8px;
+  padding-left:20px;
+}
+.q-text code, .opt-text code, .rc-explain code{
+  font-family:var(--font-mono);
+  background:rgba(27,35,51,0.08);
+  padding:1px 5px;
+  border-radius:4px;
+  font-size:0.9em;
+}
+.q-text pre, .rc-explain pre{
+  background:rgba(27,35,51,0.06);
+  padding:10px 12px;
+  border-radius:8px;
+  overflow-x:auto;
+  margin:0 0 10px;
+}
+.q-text pre code, .rc-explain pre code{
+  background:none;
+  padding:0;
+}
+.q-text strong, .opt-text strong, .rc-explain strong{
+  font-weight:700;
+}
+.q-text table, .rc-explain table{
+  border-collapse:collapse;
+  margin:0 0 10px;
+  font-size:0.92em;
+}
+.q-text th, .q-text td,
+.rc-explain th, .rc-explain td{
+  border:1px solid var(--line-paper);
+  padding:4px 8px;
+}
+/* KaTeX kế thừa màu chữ của khối chứa (trên nền paper là màu tối) */
+.katex{
+  color:inherit;
+  font-size:1.05em;
 }
