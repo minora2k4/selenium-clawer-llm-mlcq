@@ -110,6 +110,80 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ---------------- Render công thức LaTeX-lite / markdown-lite ---------------- */
+// Dữ liệu câu hỏi chứa các biểu thức kiểu LaTeX rút gọn: $...$, ^{...}, _{...},
+// \frac {a}{b}, \sqrt{...}, các ký hiệu Hy Lạp (\alpha, \lambda...), và *chữ nghiêng*.
+// renderMath() chuyển các biểu thức này thành HTML hiển thị đúng định dạng
+// (chỉ số trên/dưới thật, phân số xếp dọc, căn bậc hai có gạch ngang, ký hiệu Hy Lạp...)
+// thay vì hiện nguyên văn cú pháp markdown/LaTeX.
+
+// Danh sách lệnh LaTeX -> ký hiệu Unicode. Được sắp xếp theo độ dài giảm dần khi áp dụng
+// để tránh lệnh ngắn "ăn" nhầm vào lệnh dài hơn có cùng tiền tố (vd: \to bên trong \top).
+const SYMBOL_MAP = [
+  ['\\varepsilon', 'ε'], ['\\epsilon', 'ε'],
+  ['\\lambda', 'λ'], ['\\Lambda', 'Λ'],
+  ['\\alpha', 'α'], ['\\beta', 'β'], ['\\gamma', 'γ'], ['\\Gamma', 'Γ'],
+  ['\\delta', 'δ'], ['\\Delta', 'Δ'], ['\\theta', 'θ'], ['\\Theta', 'Θ'],
+  ['\\mu', 'μ'], ['\\nu', 'ν'], ['\\pi', 'π'], ['\\rho', 'ρ'],
+  ['\\sigma', 'σ'], ['\\Sigma', 'Σ'], ['\\tau', 'τ'], ['\\upsilon', 'υ'],
+  ['\\phi', 'φ'], ['\\Phi', 'Φ'], ['\\chi', 'χ'], ['\\psi', 'ψ'],
+  ['\\omega', 'ω'], ['\\Omega', 'Ω'],
+  ['\\infty', '∞'], ['\\partial', '∂'], ['\\nabla', '∇'],
+  ['\\sum', '∑'], ['\\prod', '∏'], ['\\int', '∫'],
+  ['\\pm', '±'], ['\\mp', '∓'],
+  ['\\leq', '≤'], ['\\geq', '≥'], ['\\neq', '≠'], ['\\approx', '≈'], ['\\equiv', '≡'],
+  ['\\Rightarrow', '⇒'], ['\\rightarrow', '→'], ['\\leftarrow', '←'], ['\\top', '⊤'], ['\\to', '→'],
+  ['\\in', '∈'], ['\\notin', '∉'], ['\\subset', '⊂'], ['\\cup', '∪'], ['\\cap', '∩'],
+  ['\\cdot', '·'], ['\\times', '×'], ['\\div', '÷'],
+  ['\\forall', '∀'], ['\\exists', '∃'], ['\\emptyset', '∅'],
+  ['\\langle', '⟨'], ['\\rangle', '⟩'], ['\\perp', '⊥'],
+  ['\\ldots', '…'], ['\\cdots', '⋯'],
+  ['\\quad', '  '], ['\\,', ' '], ['\\;', ' '], ['\\!', ''],
+].sort((a, b) => b[0].length - a[0].length);
+
+function renderMath(raw){
+  if(!raw) return '';
+  let s = escapeHtml(raw);
+
+  // Phân số: \frac {a}{b} hoặc \frac{a}{b} -> xếp dọc tử số / mẫu số
+  s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (m, num, den) => (
+    '<span style="display:inline-flex;flex-direction:column;vertical-align:middle;' +
+    'text-align:center;margin:0 3px;line-height:1.15;font-size:0.92em;">' +
+    '<span style="border-bottom:1.3px solid currentColor;padding:0 3px;">' + num + '</span>' +
+    '<span style="padding:0 3px;">' + den + '</span>' +
+    '</span>'
+  ));
+
+  // Căn bậc hai: \sqrt{a} -> √ với gạch ngang trên biểu thức bên trong
+  s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, (m, inner) => (
+    '√<span style="border-top:1.3px solid currentColor;padding:0 2px;margin-left:1px;">' + inner + '</span>'
+  ));
+  // \sqrt đứng riêng (không có {}) — phần biểu thức phía sau thường đã có sẵn dấu ngoặc đơn
+  s = s.replace(/\\sqrt\b/g, '√');
+
+  // Mũ / chỉ số dưới có ngoặc nhọn: x^{2}, x_{i}
+  s = s.replace(/\^\{([^{}]*)\}/g, '<sup>$1</sup>');
+  s = s.replace(/_\{([^{}]*)\}/g, '<sub>$1</sub>');
+  // Mũ / chỉ số dưới 1 ký tự không có ngoặc nhọn: x^2, x_i
+  s = s.replace(/\^([A-Za-z0-9])/g, '<sup>$1</sup>');
+  s = s.replace(/_([A-Za-z0-9])/g, '<sub>$1</sub>');
+
+  // Ký hiệu Hy Lạp & toán học
+  SYMBOL_MAP.forEach(([cmd, sym]) => { s = s.split(cmd).join(sym); });
+
+  // Bỏ các dấu $ dùng để đánh dấu công thức, không cần thiết sau khi đã render
+  s = s.replace(/\$/g, '');
+
+  // *chữ nghiêng*: chỉ áp dụng khi nội dung dính liền (không khoảng trắng) để không
+  // nhầm với dấu * là phép nhân (trong dữ liệu luôn có khoảng trắng bao quanh)
+  s = s.replace(/\*([A-Za-zΑ-Ωα-ω0-9][A-Za-zΑ-Ωα-ω0-9'’\-]{0,20})\*/g, '<em>$1</em>');
+
+  // Xuống dòng
+  s = s.replace(/\n\n+/g, '<br><br>').replace(/\n/g, '<br>');
+
+  return s;
+}
+
 /* ---------------- State ---------------- */
 let session = null; // {title, questions:[...], answers:{qid:key}, order index}
 let currentIndex = 0;
@@ -232,7 +306,7 @@ function renderQuiz(){
   const optionsHtml = q.options.map(o=>`
     <div class="option ${selected===o.key?'selected':''}" data-key="${o.key}">
       <span class="key">${o.key.toUpperCase()}</span>
-      <span>${escapeHtml(o.text)}</span>
+      <span>${renderMath(o.text)}</span>
     </div>`).join('');
 
   const navDots = session.questions.map((qq,i)=>{
@@ -254,7 +328,7 @@ function renderQuiz(){
 
     <span class="q-topic-tag">${escapeHtml(topicTitle)}</span>
     <div class="q-card">
-      <p class="q-text">${escapeHtml(q.question)}</p>
+      <p class="q-text">${renderMath(q.question)}</p>
       <div class="options" id="options-wrap">${optionsHtml}</div>
     </div>
 
@@ -363,7 +437,7 @@ function renderResult(){
       else if(o.key === userKey) cls = 'wrong-answer';
       return `<div class="option disabled ${cls}">
         <span class="key">${o.key.toUpperCase()}</span>
-        <span>${escapeHtml(o.text)}</span>
+        <span>${renderMath(o.text)}</span>
       </div>`;
     }).join('');
     const topicTitle = TOPICS.find(t=>t.index===q.topicIndex).title;
@@ -373,9 +447,9 @@ function renderResult(){
         <span class="rc-topic">${escapeHtml(topicTitle)}</span>
         ${userKey===undefined ? '<span class="rc-topic">(chưa trả lời)</span>' : ''}
       </div>
-      <p class="q-text">${escapeHtml(q.question)}</p>
+      <p class="q-text">${renderMath(q.question)}</p>
       <div class="options">${optsHtml}</div>
-      <div class="rc-explain"><b>Giải thích:</b> ${escapeHtml(q.explanation || 'Không có giải thích.')}</div>
+      <div class="rc-explain"><b>Giải thích:</b> ${renderMath(q.explanation || 'Không có giải thích.')}</div>
     </div>`;
   }).join('') || `<div class="empty-note">Không có câu nào trong mục này.</div>`;
 
